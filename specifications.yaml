@@ -1,0 +1,590 @@
+openapi: 3.0.3
+info:
+  title: Gamified Todo API
+  version: 1.0.0
+  description: >
+    Une API de gestion de tâches avec gamification (XP, niveaux, badges, défis quotidiens, streaks).
+  contact:
+    name: Hugo BARBIERI
+    email: hugo.barbieri@etu.univ-grenoble-alpes.fr
+
+servers:
+  - url: http://localhost:3000/api
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Tasks
+  - name: Badges
+  - name: Challenges
+  - name: Leaderboard
+  - name: Categories
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    UnauthorizedError:
+      description: Token JWT manquant ou invalide
+    ForbiddenError:
+      description: Accès refusé
+    NotFoundError:
+      description: Ressource non trouvée
+    ValidationError:
+      description: Données invalides
+    ServerError:
+      description: Erreur serveur
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        xp:
+          type: integer
+        level:
+          type: integer
+        streak:
+          type: integer
+        longestStreak:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        lastLogin:
+          type: string
+          format: date-time
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          example: "sport"
+        done:
+          type: boolean
+        points:
+          type: integer
+        deadline:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    TaskCreate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        done:
+          type: boolean
+        deadline:
+          type: string
+          format: date-time
+
+    Badge:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        icon:
+          type: string
+        description:
+          type: string
+        condition:
+          type: string
+
+    Challenge:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        points:
+          type: integer
+        date:
+          type: string
+          format: date-time
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        xp:
+          type: integer
+        level:
+          type: integer
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Créer un nouveau compte utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+      responses:
+        "201":
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Se connecter et obtenir un token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Token JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /users:
+    get:
+      tags: [Users]
+      summary: Liste des utilisateurs (admin uniquement)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Récupérer le profil de l’utilisateur connecté
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profil de l’utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+    put:
+      tags: [Users]
+      summary: Mettre à jour le profil de l’utilisateur connecté
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+      responses:
+        "200":
+          description: Profil mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Récupérer un utilisateur par ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Utilisateur trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+    delete:
+      tags: [Users]
+      summary: Supprimer un utilisateur (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Utilisateur supprimé
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /users/{id}/progress:
+    get:
+      tags: [Users]
+      summary: Récupérer progression d’un utilisateur
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Progression de l’utilisateur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  xp:
+                    type: integer
+                  level:
+                    type: integer
+                  streak:
+                    type: integer
+                  badges:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Badge"
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: Liste des tâches de l’utilisateur connecté
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Nombre maximum de tâches à retourner
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: Décalage pour pagination
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filtrer par catégorie
+      responses:
+        "200":
+          description: Liste des tâches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+    post:
+      tags: [Tasks]
+      summary: Créer une nouvelle tâche
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreate"
+      responses:
+        "201":
+          description: Tâche créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /tasks/{id}:
+    put:
+      tags: [Tasks]
+      summary: Mettre à jour une tâche
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Tâche mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+    delete:
+      tags: [Tasks]
+      summary: Supprimer une tâche
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Tâche supprimée
+
+  /tasks/{id}/complete:
+    patch:
+      tags: [Tasks]
+      summary: Marquer une tâche comme complétée (ajoute de l’XP)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tâche complétée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /badges:
+    get:
+      tags: [Badges]
+      summary: Liste des badges obtenus par l’utilisateur connecté
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Liste des badges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Badge"
+
+  /challenges:
+    get:
+      tags: [Challenges]
+      summary: Liste des challenges
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Liste des challenges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Challenge"
+
+  /challenges/today:
+    get:
+      tags: [Challenges]
+      summary: Récupérer le défi du jour
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Défi du jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Challenge"
+
+  /challenges/{id}/complete:
+    post:
+      tags: [Challenges]
+      summary: Marquer un défi comme accompli
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Défi accompli
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /leaderboard:
+    get:
+      tags: [Leaderboard]
+      summary: Classement global des utilisateurs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: Liste des catégories de tâches disponibles
+      responses:
+        "200":
+          description: Liste des catégories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string

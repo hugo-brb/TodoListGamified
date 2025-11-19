@@ -5,6 +5,8 @@ import { User } from '../schemas/user.schema';
 import { Task } from '../schemas/task.schema';
 import { Badge } from '../schemas/badge.schema';
 import { Challenge } from '../schemas/challenge.schema';
+import { UserBadge } from '../schemas/user-badge.schema';
+import { UserChallenge } from '../schemas/user-challenge.schema';
 import * as argon2 from 'argon2';
 
 @Injectable()
@@ -16,6 +18,9 @@ export class SeedService {
     @InjectModel(Task.name) private taskModel: Model<Task>,
     @InjectModel(Badge.name) private badgeModel: Model<Badge>,
     @InjectModel(Challenge.name) private challengeModel: Model<Challenge>,
+    @InjectModel(UserBadge.name) private userBadgeModel: Model<UserBadge>,
+    @InjectModel(UserChallenge.name)
+    private userChallengeModel: Model<UserChallenge>,
   ) {}
 
   async seedDatabase() {
@@ -403,6 +408,8 @@ export class SeedService {
     await this.taskModel.deleteMany({});
     await this.badgeModel.deleteMany({});
     await this.challengeModel.deleteMany({});
+    await this.userBadgeModel.deleteMany({});
+    await this.userChallengeModel.deleteMany({});
 
     this.logger.log('✅ Base de données nettoyée');
   }

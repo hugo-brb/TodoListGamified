@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { ConsoleLogger, LogLevel, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { SeedService } from './database/seed.service';
+import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,6 +23,14 @@ async function bootstrap() {
     }),
   );
 
+  // Redirect root to /api before setting global prefix
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.url === '/' || req.url === '') {
+      return res.redirect(301, '/api');
+    }
+    next();
+  });
+
   app
     .setGlobalPrefix('api')
     .use((cookieParser as unknown as () => import('express').RequestHandler)())
@@ -30,7 +39,7 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Gamified Todo API')
-    .setDescription('Documentation de l’API Gamified Todo sqf')
+    .setDescription("Documentation de l'API Gamified Todo")
     .setVersion('1.0.0')
     .addBearerAuth()
     .build();

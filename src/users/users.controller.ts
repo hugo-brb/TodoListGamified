@@ -17,7 +17,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
-import { MockAuthGuard } from '../common/mock-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../common/admin.guard';
 import { UsersService } from './users.service';
 import { Types } from 'mongoose';
@@ -59,7 +59,7 @@ class UpdateMeDto {
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(MockAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Get()
   @ApiOperation({
     summary: 'Lister tous les utilisateurs (Admin)',
@@ -91,7 +91,7 @@ export class UsersController {
     return this.usersService.listAll();
   }
 
-  @UseGuards(MockAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   @ApiOperation({
     summary: 'Obtenir mon profil',
@@ -119,7 +119,7 @@ export class UsersController {
     return this.usersService.me(userId);
   }
 
-  @UseGuards(MockAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Put('me')
   @ApiOperation({
     summary: 'Mettre à jour mon profil',
@@ -184,7 +184,7 @@ export class UsersController {
     return this.usersService.getById(id);
   }
 
-  @UseGuards(MockAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({

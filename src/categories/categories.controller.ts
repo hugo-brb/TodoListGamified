@@ -32,7 +32,6 @@ export class CategoriesController {
     },
   })
   async list() {
-    // Get distinct categories from tasks in database
     const categories = await this.taskModel.distinct('category').exec();
     return categories.length > 0
       ? categories

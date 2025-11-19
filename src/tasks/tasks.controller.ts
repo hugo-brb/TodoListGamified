@@ -22,8 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { IsBoolean, IsDateString, IsOptional, IsString } from 'class-validator';
 import { Types } from 'mongoose';
-
-import { MockAuthGuard } from '../common/mock-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TasksService } from './tasks.service';
 
 class TaskCreateDto {
@@ -119,11 +118,11 @@ class TaskUpdateDto {
 
 @ApiTags('Tasks')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
-  @UseGuards(MockAuthGuard)
   @Get()
   @ApiOperation({
     summary: 'Lister les tâches',
@@ -180,7 +179,6 @@ export class TasksController {
     });
   }
 
-  @UseGuards(MockAuthGuard)
   @Post()
   @ApiOperation({
     summary: 'Créer une tâche',
@@ -214,7 +212,6 @@ export class TasksController {
     });
   }
 
-  @UseGuards(MockAuthGuard)
   @Put(':id')
   @ApiOperation({
     summary: 'Modifier une tâche',
@@ -246,7 +243,6 @@ export class TasksController {
     return this.tasksService.update(id, dto);
   }
 
-  @UseGuards(MockAuthGuard)
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({
@@ -265,7 +261,6 @@ export class TasksController {
     return;
   }
 
-  @UseGuards(MockAuthGuard)
   @Patch(':id/complete')
   @ApiOperation({
     summary: 'Marquer une tâche comme terminée',

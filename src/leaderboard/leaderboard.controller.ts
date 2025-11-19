@@ -6,16 +6,16 @@ import {
   ApiQuery,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { MockAuthGuard } from '../common/mock-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { LeaderboardService } from './leaderboard.service';
 
 @ApiTags('Leaderboard')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('leaderboard')
 export class LeaderboardController {
   constructor(private readonly leaderboardService: LeaderboardService) {}
 
-  @UseGuards(MockAuthGuard)
   @Get()
   @ApiOperation({
     summary: 'Afficher le classement',

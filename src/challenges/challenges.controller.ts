@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards, Req } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -6,8 +6,13 @@ import {
   ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { MockAuthGuard } from '../common/mock-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ChallengesService } from './challenges.service';
+import { AuthenticatedUser } from '../auth/jwt.strategy';
+
+interface AuthRequest {
+  user: AuthenticatedUser;
+}
 
 @ApiTags('Challenges')
 @ApiBearerAuth()
@@ -15,7 +20,7 @@ import { ChallengesService } from './challenges.service';
 export class ChallengesController {
   constructor(private readonly challengesService: ChallengesService) {}
 
-  @UseGuards(MockAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({
     summary: 'Lister tous les challenges',
@@ -34,15 +39,16 @@ export class ChallengesController {
           category: 'sport',
           difficulty: 'moyen',
           expiresAt: '2024-11-30T23:59:59.000Z',
+          completed: false,
         },
       ],
     },
   })
-  list() {
-    return this.challengesService.list();
+  list(@Req() req: AuthRequest) {
+    return this.challengesService.list(req.user.userId);
   }
 
-  @UseGuards(MockAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('today')
   @ApiOperation({
     summary: 'Challenge du jour',
@@ -60,6 +66,7 @@ export class ChallengesController {
         category: 'général',
         difficulty: 'facile',
         expiresAt: '2024-11-21T23:59:59.000Z',
+        completed: false,
       },
     },
   })
@@ -67,11 +74,11 @@ export class ChallengesController {
     status: 404,
     description: 'Aucun challenge du jour disponible',
   })
-  today() {
-    return this.challengesService.today();
+  today(@Req() req: AuthRequest) {
+    return this.challengesService.today(req.user.userId);
   }
 
-  @UseGuards(MockAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post(':id/complete')
   @ApiOperation({
     summary: 'Compléter un challenge',
@@ -98,7 +105,7 @@ export class ChallengesController {
     status: 404,
     description: 'Challenge non trouvé',
   })
-  async complete(@Param('id') id: string) {
-    return this.challengesService.complete(id);
+  async complete(@Param('id') id: string, @Req() req: AuthRequest) {
+    return this.challengesService.complete(id, req.user.userId);
   }
 }

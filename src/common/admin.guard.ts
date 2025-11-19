@@ -5,12 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Request } from 'express';
-
-interface AuthenticatedUser {
-  id: number;
-  username: string;
-  admin: boolean;
-}
+import { AuthenticatedUser } from '../auth/jwt.strategy';
 
 interface AuthRequest extends Request {
   user?: AuthenticatedUser;

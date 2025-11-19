@@ -5,7 +5,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { MockAuthGuard } from '../common/mock-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BadgesService } from './badges.service';
 import { Types } from 'mongoose';
 
@@ -15,7 +15,7 @@ import { Types } from 'mongoose';
 export class BadgesController {
   constructor(private readonly badgesService: BadgesService) {}
 
-  @UseGuards(MockAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({
     summary: 'Lister les badges',

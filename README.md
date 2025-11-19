@@ -83,9 +83,8 @@ Le système gère **5 entités principales** interconnectées :
 
 ### Prérequis
 
-- **Node.js** >= 18
-- **npm** >= 9
-- **Docker** et **Docker Compose** (pour MongoDB)
+- **Docker** et **Docker Compose** (obligatoire)
+- **Node.js** >= 18 et **npm** >= 9 (uniquement pour l'Option B - développement local)
 
 ### 1. Cloner le dépôt
 
@@ -100,27 +99,32 @@ Vous avez **deux options** pour lancer le projet :
 
 ---
 
-## 🚀 Option A : Tout avec Docker (RECOMMANDÉ pour les correcteurs)
+## 🚀 Option A : Tout avec Docker (ULTRA-SIMPLE - RECOMMANDÉ)
 
-**Avantage :** Ultra-simple, aucune installation Node.js nécessaire sur la machine hôte
+**Avantages :**
+
+- ✅ Pas besoin d'installer Node.js
+- ✅ Pas besoin de `npm install`
+- ✅ MongoDB + Application démarrent ensemble
+- ✅ Base de données remplie automatiquement
+
+**UNE SEULE COMMANDE suffit !**
 
 \`\`\`bash
-
-# Lancer MongoDB + Application en un seul coup
-
 docker-compose up -d
-
-# Voir les logs en temps réel (optionnel)
-
-docker-compose logs -f app
 \`\`\`
 
-✅ L'application démarre automatiquement sur **http://localhost:3000**  
-✅ La base de données se remplit automatiquement avec les données de test  
-✅ Documentation Swagger accessible sur **http://localhost:3000/api**
+✅ L'application est accessible sur <http://localhost:3000>  
+✅ La documentation Swagger est sur <http://localhost:3000/api>  
+✅ La base de données se remplit automatiquement avec les données de test
 
 **Commandes utiles :**
+
 \`\`\`bash
+
+# Voir les logs en temps réel
+
+docker-compose logs -f app
 
 # Arrêter tout
 
@@ -139,15 +143,15 @@ docker-compose up -d --build
 
 ## 🔧 Option B : Développement local (pour coder)
 
-**Avantage :** Hot-reload, débogage facile, logs directs
+**Avantages :** Hot-reload, débogage facile, logs directs
 
-#### 2.1 Installer les dépendances
+### 2.1 Installer les dépendances
 
 \`\`\`bash
 npm install
 \`\`\`
 
-#### 2.2 Configuration
+### 2.2 Configuration
 
 Copier et modifier le fichier \`.env\` :
 
@@ -156,6 +160,7 @@ cp .env.example .env
 \`\`\`
 
 **Important :** Modifier \`.env\` pour utiliser \`localhost\` :
+
 \`\`\`env
 NODE_ENV=development
 PORT=3000
@@ -173,13 +178,13 @@ MONGO_INITDB_DATABASE=todo
 AUTO_SEED=true
 \`\`\`
 
-#### 2.3 Lancer MongoDB seul
+### 2.3 Lancer MongoDB seul
 
 \`\`\`bash
 docker-compose up -d mongo
 \`\`\`
 
-#### 2.4 Lancer l'application en mode développement
+### 2.4 Lancer l'application en mode développement
 
 \`\`\`bash
 
@@ -193,8 +198,31 @@ npm run build
 npm run start:prod
 \`\`\`
 
-✅ L'application démarre sur **http://localhost:3000**  
-✅ Documentation Swagger sur **http://localhost:3000/api**
+✅ L'application démarre sur <http://localhost:3000> (redirige vers /api)  
+✅ Documentation Swagger sur <http://localhost:3000/api>
+
+---
+
+## 🧪 Test Rapide de l'API
+
+### Via Swagger (Interface Web)
+
+Ouvrir <http://localhost:3000/api>
+
+### Via Curl
+
+```bash
+# Se connecter
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@todo.com","password":"password123"}'
+
+# Lister les tâches
+curl http://localhost:3000/api/tasks
+
+# Voir le leaderboard
+curl http://localhost:3000/api/leaderboard
+```
 
 ---
 
@@ -251,22 +279,24 @@ npm run seed
 npm run seed:clear
 \`\`\`
 
-### Test de l'API avec les données de seed
+### Connexion avec les Utilisateurs de Test
 
 Vous pouvez vous connecter avec n'importe quel utilisateur du seed :
 
-**POST** \`/api/auth/login\`
-\`\`\`json
+**POST** `/api/auth/login`
+
+```json
 {
-"email": "admin@todo.com",
-"password": "password123"
+  "email": "admin@todo.com",
+  "password": "password123"
 }
-\`\`\`
+```
 
 Le token retourné peut ensuite être utilisé dans les headers :
-\`\`\`
-Authorization: Bearer <token>
-\`\`\`
+
+```http
+Authorization: Bearer YOUR_TOKEN_HERE
+```
 
 ---
 
@@ -312,7 +342,60 @@ Toutes les routes de la spécification OpenAPI (\`specifications.yaml\`) sont im
 
 ### 📂 Categories
 
-- \`GET /api/categories\` - Liste des catégories disponibles
+- `GET /api/categories` - Liste des catégories disponibles
+
+---
+
+## 🧪 Tester l'API avec le REST Client
+
+Un fichier `api.http` est disponible à la racine du projet pour tester facilement tous les endpoints de l'API.
+
+### Utilisation avec VS Code
+
+1. **Installer l'extension REST Client** (humao.rest-client) si ce n'est pas déjà fait
+2. **Ouvrir le fichier** `api.http`
+3. **Lancer l'application** (voir section Installation)
+4. **Cliquer sur "Send Request"** au-dessus de chaque requête
+
+### Workflow typique
+
+1. **Se connecter** avec un utilisateur de test :
+
+   ```http
+   POST {{baseUrl}}/auth/login
+   Content-Type: application/json
+
+   {
+     "email": "admin@todo.com",
+     "password": "password123"
+   }
+   ```
+
+2. **Copier le token JWT** retourné dans la réponse
+
+3. **Remplacer** `@token = your_jwt_token_here` en haut du fichier `api.http` par le token obtenu
+
+4. **Tester les autres endpoints** qui nécessitent une authentification
+
+### Utilisateurs disponibles (avec seed)
+
+- `admin@todo.com` / `password123` (admin, niveau 5, 1250 XP)
+- `alice@example.com` / `password123` (niveau 4, 850 XP)
+- `bob@example.com` / `password123` (niveau 3, 450 XP)
+- `charlie@example.com` / `password123` (niveau 2, 200 XP)
+- `diana@example.com` / `password123` (niveau 1, 50 XP)
+
+### Exemples de requêtes disponibles
+
+- 🔐 **Authentification** : Register, Login
+- 👤 **Utilisateurs** : Profil, Mise à jour, Liste (admin), Progression
+- ✅ **Tâches** : Liste (avec filtres), Création, Mise à jour, Complétion, Suppression
+- 🏅 **Badges** : Liste des badges obtenus
+- 🎯 **Challenges** : Liste, Défi du jour, Complétion
+- 🏆 **Leaderboard** : Classement global (avec pagination)
+- 📂 **Categories** : Liste des catégories
+
+**Alternative** : Vous pouvez également utiliser **Postman**, **Insomnia**, ou directement la **documentation Swagger** sur http://localhost:3000/api
 
 ---
 
@@ -392,7 +475,16 @@ npm run test:cov
 ## 📦 Structure du Projet
 
 \`\`\`
-src/
+.
+├── api.http # REST Client pour tester l'API
+├── docker-compose.yml # Configuration Docker
+├── docker-compose.dev.yml # Configuration Docker développement
+├── Dockerfile # Image Docker production
+├── Dockerfile.dev # Image Docker développement
+├── package.json
+├── README.md
+├── specifications.yaml # Spécification OpenAPI complète
+└── src/
 ├── auth/ # Module d'authentification
 ├── users/ # Module utilisateurs
 ├── tasks/ # Module tâches
@@ -411,6 +503,7 @@ src/
 ├── common/ # Guards et utilitaires
 │ ├── admin.guard.ts
 │ └── mock-auth.guard.ts
+├── app.controller.ts # Controller racine (redirection)
 ├── app.module.ts # Module racine
 ├── main.ts # Point d'entrée
 └── seed.ts # Script de seed manuel
@@ -447,11 +540,13 @@ src/
 ### 🎁 Bonus Implémentés
 
 - [x] **Base de données MongoDB** (alors que le sujet recommandait JSON en mémoire)
-- [x] **Seed automatique** au démarrage (\`AUTO_SEED=true\`)
+- [x] **Seed automatique** au démarrage (`AUTO_SEED=true`)
 - [x] **Docker Compose** pour déploiement simplifié
 - [x] **Documentation Swagger** interactive
 - [x] **Validation des données** complète
 - [x] **Architecture modulaire** NestJS professionnelle
+- [x] **REST Client** (`api.http`) pour tester facilement tous les endpoints
+- [x] **Redirection automatique** de la racine (/) vers /api (documentation Swagger)
 
 ---
 
@@ -473,7 +568,7 @@ ports: - "27017:27017"
 volumes: - mongo-data:/data/db
 \`\`\`
 
-**Commandes Docker**
+### Commandes Docker
 
 \`\`\`bash
 
@@ -493,6 +588,46 @@ docker-compose down
 
 docker-compose down -v
 \`\`\`
+
+---
+
+## ❌ Dépannage
+
+### Le port 27017 est déjà utilisé
+
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+### La base de données est vide
+
+Vérifier que `AUTO_SEED=true` dans `.env`, puis redémarrer :
+
+```bash
+npm run start:dev
+```
+
+Ou utiliser le seed manuel :
+
+```bash
+npm run seed:clear
+```
+
+### L'application ne démarre pas avec Docker
+
+Vérifier les logs :
+
+```bash
+docker-compose logs -f app
+```
+
+Reconstruire l'image :
+
+```bash
+docker-compose down
+docker-compose up -d --build
+```
 
 ---
 

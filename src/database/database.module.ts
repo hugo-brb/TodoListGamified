@@ -6,6 +6,11 @@ import { User, UserSchema } from '../schemas/user.schema';
 import { Task, TaskSchema } from '../schemas/task.schema';
 import { Badge, BadgeSchema } from '../schemas/badge.schema';
 import { Challenge, ChallengeSchema } from '../schemas/challenge.schema';
+import { UserBadge, UserBadgeSchema } from '../schemas/user-badge.schema';
+import {
+  UserChallenge,
+  UserChallengeSchema,
+} from '../schemas/user-challenge.schema';
 
 @Module({
   imports: [
@@ -47,6 +52,8 @@ import { Challenge, ChallengeSchema } from '../schemas/challenge.schema';
       { name: Task.name, schema: TaskSchema },
       { name: Badge.name, schema: BadgeSchema },
       { name: Challenge.name, schema: ChallengeSchema },
+      { name: UserBadge.name, schema: UserBadgeSchema },
+      { name: UserChallenge.name, schema: UserChallengeSchema },
     ]),
   ],
   providers: [SeedService],

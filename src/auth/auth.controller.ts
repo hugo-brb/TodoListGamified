@@ -6,7 +6,9 @@ import {
   ApiProperty,
 } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { JwtPayload } from './jwt.strategy';
 import * as argon2 from 'argon2';
 
 class RegisterDto {
@@ -56,7 +58,10 @@ class LoginDto {
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post('register')
   @ApiOperation({
@@ -138,6 +143,16 @@ export class AuthController {
       // ignore
     }
 
-    return { token: 'mock-jwt-token', userId: found._id };
+    // Generate real JWT token
+    const payload: JwtPayload = {
+      sub: found._id.toString(),
+      email: found.email,
+      username: found.username,
+      admin: found.email === 'admin@todo.com', // Admin logic based on email
+    };
+
+    const token = this.jwtService.sign(payload);
+
+    return { token, userId: found._id };
   }
 }

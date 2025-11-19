@@ -90,4 +90,88 @@ export class UsersService {
       badges: badges,
     };
   }
+
+  /**
+   * Award XP to user and calculate level
+   */
+  async awardXP(
+    userId: Types.ObjectId,
+    xpAmount: number,
+  ): Promise<{ newXP: number; newLevel: number; leveledUp: boolean }> {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('Utilisateur introuvable');
+
+    const oldLevel = user.level;
+    const newXP = user.xp + xpAmount;
+
+    // Calculate new level (100 XP per level)
+    const newLevel = Math.floor(newXP / 100) + 1;
+
+    await this.userModel.findByIdAndUpdate(userId, {
+      xp: newXP,
+      level: newLevel,
+    });
+
+    return {
+      newXP,
+      newLevel,
+      leveledUp: newLevel > oldLevel,
+    };
+  }
+
+  /**
+   * Update streak when user completes a task
+   */
+  async updateStreak(userId: Types.ObjectId): Promise<{
+    streak: number;
+    longestStreak: number;
+    streakBroken: boolean;
+  }> {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('Utilisateur introuvable');
+
+    const now = new Date();
+    const lastLogin = user.lastLogin || new Date(0);
+
+    // Check if last login was yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+
+    const lastLoginDate = new Date(lastLogin);
+    lastLoginDate.setHours(0, 0, 0, 0);
+
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+
+    let newStreak = user.streak;
+    let streakBroken = false;
+
+    // If last login was today, keep streak
+    if (lastLoginDate.getTime() === today.getTime()) {
+      newStreak = user.streak;
+    }
+    // If last login was yesterday, increment streak
+    else if (lastLoginDate.getTime() === yesterday.getTime()) {
+      newStreak = user.streak + 1;
+    }
+    // Else, reset streak
+    else {
+      newStreak = 1;
+      streakBroken = user.streak > 0;
+    }
+
+    const longestStreak = Math.max(user.longestStreak, newStreak);
+
+    await this.userModel.findByIdAndUpdate(userId, {
+      streak: newStreak,
+      longestStreak,
+    });
+
+    return {
+      streak: newStreak,
+      longestStreak,
+      streakBroken,
+    };
+  }
 }

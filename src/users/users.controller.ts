@@ -19,6 +19,7 @@ import {
 import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../common/admin.guard';
+import { HateoasHelper } from '../common/hateoas.helper';
 import { UsersService } from './users.service';
 import { Types } from 'mongoose';
 
@@ -114,9 +115,10 @@ export class UsersController {
       },
     },
   })
-  me() {
+  async me() {
     const userId = new Types.ObjectId('000000000000000000000001');
-    return this.usersService.me(userId);
+    const user = await this.usersService.me(userId);
+    return HateoasHelper.addLinks(user, HateoasHelper.userMeLinks());
   }
 
   @UseGuards(JwtAuthGuard)
@@ -145,9 +147,10 @@ export class UsersController {
     status: 400,
     description: 'Données invalides',
   })
-  updateMe(@Body() dto: UpdateMeDto) {
+  async updateMe(@Body() dto: UpdateMeDto) {
     const userId = new Types.ObjectId('000000000000000000000001');
-    return this.usersService.updateMe(userId, dto);
+    const user = await this.usersService.updateMe(userId, dto);
+    return HateoasHelper.addLinks(user, HateoasHelper.userMeLinks());
   }
 
   @Get(':id')
@@ -180,8 +183,9 @@ export class UsersController {
     status: 404,
     description: 'Utilisateur non trouvé',
   })
-  getById(@Param('id') id: string) {
-    return this.usersService.getById(id);
+  async getById(@Param('id') id: string) {
+    const user = await this.usersService.getById(id);
+    return HateoasHelper.addLinks(user, HateoasHelper.userLinks(id));
   }
 
   @UseGuards(JwtAuthGuard, AdminGuard)

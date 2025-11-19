@@ -2,9 +2,10 @@
 
 ## 📖 Description
 
-Cette API REST implémente un système de gestion de tâches gamifié avec des fonctionnalités de progression (XP, niveaux), de badges, de défis quotidiens et de classement. Le projet a été développé avec **NestJS** et **MongoDB** dans le cadre du module R5.08 - Services web.
+Cette API REST implémente un système de gestion de tâches gamifié avec des fonctionnalités de progression (XP, niveaux), de badges, de défis quotidiens et de classement.
 
 **Auteur:** Hugo BARBIERI
+
 **Email:** hugo.barbieri@etu.univ-grenoble-alpes.fr
 
 ---
@@ -43,31 +44,9 @@ Le système gère **5 entités principales** interconnectées :
 
 - Classification des tâches (sport, étude, travail, vie quotidienne, bien-être)
 
-### Diagramme de Classes (simplifié)
+### Diagramme de Classes
 
-\`\`\`
-┌─────────────┐ 1 \* ┌──────────────┐
-│ User │◄─────────────────────┤ Task │
-├─────────────┤ ├──────────────┤
-│ username │ │ title │
-│ email │ │ description │
-│ xp │ │ category │
-│ level │ │ done │
-│ streak │ │ points │
-└─────────────┘ └──────────────┘
-│
-│ obtient
-│
-▼
-┌─────────────┐ ┌──────────────┐
-│ Badge │ │ Challenge │
-├─────────────┤ ├──────────────┤
-│ name │ │ title │
-│ icon │ │ description │
-│ description │ │ points │
-│ condition │ │ date │
-└─────────────┘ └──────────────┘
-\`\`\`
+Voir fichier TodoListGamified_Class-Diagram.pdf
 
 ### Mécaniques de Gamification
 
@@ -415,20 +394,6 @@ Un fichier `api.http` est disponible à la racine du projet pour tester facileme
 - Ajout de la validation avec class-validator
 - Documentation automatique avec @nestjs/swagger
 
-**3. Pourquoi cette approche ?**
-
-✅ **Avantages**
-
-- **Design-first** : conception réfléchie de l'API avant le code
-- **Documentation toujours à jour** : la spec sert de référence
-- **Clarté** : contrat API défini dès le départ
-- **Collaboration** : facilite le travail en équipe (frontend/backend)
-
-❌ **Inconvénients potentiels**
-
-- Modifications nécessitent de synchroniser spec et code
-- Peut sembler plus lent au début
-
 ### Choix Techniques
 
 - **NestJS** : Framework structuré, architecture modulaire, injection de dépendances
@@ -441,34 +406,67 @@ Un fichier `api.http` est disponible à la racine du projet pour tester facileme
 
 L'API suit les principes REST :
 
-- Ressources identifiées par URI (\`/users/:id\`, \`/tasks/:id\`)
+- Ressources identifiées par URI (`/users/:id`, `/tasks/:id`)
 - Méthodes HTTP sémantiques (GET, POST, PUT, DELETE, PATCH)
 - Codes de statut HTTP appropriés (200, 201, 204, 400, 401, 403, 404)
 - Stateless : pas de session côté serveur
 
-**Note sur HATEOAS** : L'implémentation actuelle ne propose pas de liens HATEOAS complets dans les réponses. Cela pourrait être ajouté en bonus en incluant des liens \`\_links\` dans les réponses JSON.
+**HATEOAS (Hypermedia As The Engine Of Application State)** : ✅ **Implémenté**
 
----
+Toutes les réponses de l'API incluent des liens `_links` permettant la navigation hypermedia. Chaque réponse est structurée ainsi :
 
-## 🧪 Tests
+```json
+{
+  "data": {
+    /* ... données de la ressource ... */
+  },
+  "_links": [
+    { "rel": "self", "href": "/api/resource/123", "method": "GET" },
+    { "rel": "update", "href": "/api/resource/123", "method": "PUT" },
+    { "rel": "delete", "href": "/api/resource/123", "method": "DELETE" }
+  ]
+}
+```
 
-### Tests unitaires
+**Exemples de liens HATEOAS :**
 
-\`\`\`bash
-npm run test
-\`\`\`
+- **Tâches** : liens vers `self`, `update`, `delete`, `complete`, `list`
+- **Utilisateurs** : liens vers `self`, `progress`, `update`, `tasks`, `badges`, `challenges`
+- **Challenges** : liens vers `self`, `complete`, `list`, `today`
+- **Badges** : liens vers `self`, `profile`
+- **Leaderboard** : liens vers `self`, `profile`
+- **Authentification** : liens vers `login`, `register`, `profile`
 
-### Tests end-to-end
+Cela permet aux clients de découvrir dynamiquement les actions possibles sans connaître à l'avance la structure de l'API.
 
-\`\`\`bash
-npm run test:e2e
-\`\`\`
+#### Exemple concret de réponse HATEOAS
 
-### Coverage
+**Requête :** `GET /api/tasks`
 
-\`\`\`bash
-npm run test:cov
-\`\`\`
+**Réponse :**
+
+```json
+{
+  "data": [
+    {
+      "_id": "673ec7d47f6e8b4a2f1c3d4e",
+      "userId": "000000000000000000000001",
+      "title": "Faire du jogging",
+      "description": "Course de 5km dans le parc",
+      "category": "sport",
+      "done": false,
+      "deadline": "2025-11-25T18:00:00.000Z",
+      "createdAt": "2024-11-21T10:30:00.000Z"
+    }
+  ],
+  "_links": [
+    { "rel": "self", "href": "/api/tasks", "method": "GET" },
+    { "rel": "create", "href": "/api/tasks", "method": "POST" }
+  ]
+}
+```
+
+Le client peut maintenant voir qu'il peut créer une nouvelle tâche via `POST /api/tasks` sans avoir besoin de consulter la documentation.
 
 ---
 
@@ -502,7 +500,7 @@ npm run test:cov
 │ └── challenge.schema.ts
 ├── common/ # Guards et utilitaires
 │ ├── admin.guard.ts
-│ └── mock-auth.guard.ts
+│ └── hateoas.helper.ts
 ├── app.controller.ts # Controller racine (redirection)
 ├── app.module.ts # Module racine
 ├── main.ts # Point d'entrée
@@ -517,36 +515,6 @@ npm run test:cov
 - Validation des données d'entrée avec **class-validator**
 - Guards NestJS pour protéger les routes sensibles
 - Variables d'environnement pour les secrets
-
----
-
-## 📝 Conformité aux Exigences du Projet
-
-### ✅ Checklist
-
-- [x] **Spécification du système** (texte + diagramme)
-- [x] **Spécification OpenAPI complète** (\`specifications.yaml\`)
-- [x] **Serveur Node.js conforme** (NestJS + MongoDB)
-- [x] **README.md complet** avec :
-  - [x] Spécification du système
-  - [x] Instructions d'exécution
-  - [x] Jeu de données expliqué
-  - [x] Méthodologie suivie
-- [x] **4-6 entités** dans le domaine métier (5 entités : User, Task, Badge, Challenge, Category)
-- [x] **Données factices suffisantes** (5 utilisateurs, 16 tâches, 6 badges, 5 challenges)
-- [x] **Toutes les méthodes HTTP** utilisées (GET, POST, PUT, DELETE, PATCH)
-- [x] **Seed automatique** pour faciliter les tests par les correcteurs
-
-### 🎁 Bonus Implémentés
-
-- [x] **Base de données MongoDB** (alors que le sujet recommandait JSON en mémoire)
-- [x] **Seed automatique** au démarrage (`AUTO_SEED=true`)
-- [x] **Docker Compose** pour déploiement simplifié
-- [x] **Documentation Swagger** interactive
-- [x] **Validation des données** complète
-- [x] **Architecture modulaire** NestJS professionnelle
-- [x] **REST Client** (`api.http`) pour tester facilement tous les endpoints
-- [x] **Redirection automatique** de la racine (/) vers /api (documentation Swagger)
 
 ---
 

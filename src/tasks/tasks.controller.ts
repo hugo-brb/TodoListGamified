@@ -23,6 +23,7 @@ import {
 import { IsBoolean, IsDateString, IsOptional, IsString } from 'class-validator';
 import { Types } from 'mongoose';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { HateoasHelper } from '../common/hateoas.helper';
 import { TasksService } from './tasks.service';
 
 class TaskCreateDto {
@@ -171,12 +172,13 @@ export class TasksController {
     @Query('category') category?: string,
   ) {
     const userId = new Types.ObjectId('000000000000000000000001');
-    return this.tasksService.list({
+    const tasks = await this.tasksService.list({
       userId,
       limit: limit ? Number(limit) : undefined,
       offset: offset ? Number(offset) : undefined,
       category,
     });
+    return HateoasHelper.addLinks(tasks, HateoasHelper.taskListLinks());
   }
 
   @Post()
@@ -203,13 +205,17 @@ export class TasksController {
   @ApiResponse({ status: 400, description: 'Données invalides' })
   async create(@Body() dto: TaskCreateDto) {
     const userId = new Types.ObjectId('000000000000000000000001');
-    return this.tasksService.create({
+    const task = await this.tasksService.create({
       userId,
       title: dto.title,
       description: dto.description,
       category: dto.category,
       deadline: dto.deadline,
     });
+    return HateoasHelper.addLinks(
+      task,
+      HateoasHelper.taskLinks(task._id.toString()),
+    );
   }
 
   @Put(':id')
@@ -240,7 +246,8 @@ export class TasksController {
   })
   @ApiResponse({ status: 404, description: 'Tâche non trouvée' })
   async update(@Param('id') id: string, @Body() dto: TaskUpdateDto) {
-    return this.tasksService.update(id, dto);
+    const task = await this.tasksService.update(id, dto);
+    return HateoasHelper.addLinks(task, HateoasHelper.taskLinks(id));
   }
 
   @Delete(':id')
@@ -291,6 +298,7 @@ export class TasksController {
   })
   @ApiResponse({ status: 404, description: 'Tâche non trouvée' })
   async complete(@Param('id') id: string) {
-    return this.tasksService.complete(id);
+    const result = await this.tasksService.complete(id);
+    return HateoasHelper.addLinks(result, HateoasHelper.taskLinks(id));
   }
 }

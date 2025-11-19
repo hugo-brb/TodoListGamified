@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength } from 'class-validator';
 import { JwtService } from '@nestjs/jwt';
+import { HateoasHelper } from '../common/hateoas.helper';
 import { UsersService } from '../users/users.service';
 import { JwtPayload } from './jwt.strategy';
 import * as argon2 from 'argon2';
@@ -102,7 +103,7 @@ export class AuthController {
       email: dto.email,
       password: passwordHash,
     });
-    return user;
+    return HateoasHelper.addLinks(user, HateoasHelper.authLinks());
   }
 
   @Post('login')
@@ -153,6 +154,9 @@ export class AuthController {
 
     const token = this.jwtService.sign(payload);
 
-    return { token, userId: found._id };
+    return HateoasHelper.addLinks(
+      { token, userId: found._id },
+      HateoasHelper.authLinks(),
+    );
   }
 }

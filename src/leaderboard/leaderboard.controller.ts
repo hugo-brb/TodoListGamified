@@ -7,6 +7,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { HateoasHelper } from '../common/hateoas.helper';
 import { LeaderboardService } from './leaderboard.service';
 
 @ApiTags('Leaderboard')
@@ -56,10 +57,14 @@ export class LeaderboardController {
       ],
     },
   })
-  list(@Query('limit') limit?: number, @Query('offset') offset?: number) {
-    return this.leaderboardService.list(
+  async list(@Query('limit') limit?: number, @Query('offset') offset?: number) {
+    const leaderboard = await this.leaderboardService.list(
       limit ? Number(limit) : undefined,
       offset ? Number(offset) : undefined,
+    );
+    return HateoasHelper.addLinks(
+      leaderboard,
+      HateoasHelper.leaderboardLinks(),
     );
   }
 }

@@ -6,6 +6,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { HateoasHelper } from '../common/hateoas.helper';
 import { BadgesService } from './badges.service';
 import { Types } from 'mongoose';
 
@@ -44,8 +45,9 @@ export class BadgesController {
       ],
     },
   })
-  list() {
+  async list() {
     const userId = new Types.ObjectId('000000000000000000000001');
-    return this.badgesService.listForUser(userId);
+    const badges = await this.badgesService.listForUser(userId);
+    return HateoasHelper.addLinks(badges, HateoasHelper.badgeListLinks());
   }
 }

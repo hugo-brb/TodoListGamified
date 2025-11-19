@@ -7,6 +7,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { HateoasHelper } from '../common/hateoas.helper';
 import { ChallengesService } from './challenges.service';
 import { AuthenticatedUser } from '../auth/jwt.strategy';
 
@@ -44,8 +45,12 @@ export class ChallengesController {
       ],
     },
   })
-  list(@Req() req: AuthRequest) {
-    return this.challengesService.list(req.user.userId);
+  async list(@Req() req: AuthRequest) {
+    const challenges = await this.challengesService.list(req.user.userId);
+    return HateoasHelper.addLinks(
+      challenges,
+      HateoasHelper.challengeListLinks(),
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -74,8 +79,12 @@ export class ChallengesController {
     status: 404,
     description: 'Aucun challenge du jour disponible',
   })
-  today(@Req() req: AuthRequest) {
-    return this.challengesService.today(req.user.userId);
+  async today(@Req() req: AuthRequest) {
+    const challenge = await this.challengesService.today(req.user.userId);
+    return HateoasHelper.addLinks(
+      challenge,
+      HateoasHelper.challengeLinks(challenge._id.toString()),
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -106,6 +115,7 @@ export class ChallengesController {
     description: 'Challenge non trouvé',
   })
   async complete(@Param('id') id: string, @Req() req: AuthRequest) {
-    return this.challengesService.complete(id, req.user.userId);
+    const result = await this.challengesService.complete(id, req.user.userId);
+    return HateoasHelper.addLinks(result, HateoasHelper.challengeLinks(id));
   }
 }

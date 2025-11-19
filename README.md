@@ -67,10 +67,10 @@ Voir fichier TodoListGamified_Class-Diagram.pdf
 
 ### 1. Cloner le dépôt
 
-\`\`\`bash
+```bash
 git clone <url-du-repo>
 cd todo-list-gamified-nest
-\`\`\`
+```
 
 ### 2. Choisir votre mode d'exécution
 
@@ -89,17 +89,17 @@ Vous avez **deux options** pour lancer le projet :
 
 **UNE SEULE COMMANDE suffit !**
 
-\`\`\`bash
+```bash
 docker-compose up -d
-\`\`\`
+```
 
-✅ L'application est accessible sur <http://localhost:3000>  
-✅ La documentation Swagger est sur <http://localhost:3000/api>  
+✅ L'application est accessible sur <http://localhost:3000>
+✅ La documentation Swagger est sur <http://localhost:3000/api>
 ✅ La base de données se remplit automatiquement avec les données de test
 
 **Commandes utiles :**
 
-\`\`\`bash
+```bash
 
 # Voir les logs en temps réel
 
@@ -116,7 +116,7 @@ docker-compose down -v
 # Reconstruire après modifications du code
 
 docker-compose up -d --build
-\`\`\`
+```
 
 ---
 
@@ -126,21 +126,21 @@ docker-compose up -d --build
 
 ### 2.1 Installer les dépendances
 
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
 ### 2.2 Configuration
 
-Copier et modifier le fichier \`.env\` :
+Copier et modifier le fichier `.env` :
 
-\`\`\`bash
+```bash
 cp .env.example .env
-\`\`\`
+```
 
-**Important :** Modifier \`.env\` pour utiliser \`localhost\` :
+**Important :** Modifier `.env` pour utiliser `localhost` :
 
-\`\`\`env
+```env
 NODE_ENV=development
 PORT=3000
 
@@ -155,17 +155,17 @@ MONGO_INITDB_DATABASE=todo
 # Auto-seed: remplir la base automatiquement au démarrage
 
 AUTO_SEED=true
-\`\`\`
+```
 
 ### 2.3 Lancer MongoDB seul
 
-\`\`\`bash
+```bash
 docker-compose up -d mongo
-\`\`\`
+```
 
 ### 2.4 Lancer l'application en mode développement
 
-\`\`\`bash
+```bash
 
 # Mode développement (avec auto-reload)
 
@@ -175,9 +175,9 @@ npm run start:dev
 
 npm run build
 npm run start:prod
-\`\`\`
+```
 
-✅ L'application démarre sur <http://localhost:3000> (redirige vers /api)  
+✅ L'application démarre sur <http://localhost:3000> (redirige vers /api)
 ✅ Documentation Swagger sur <http://localhost:3000/api>
 
 ---
@@ -209,7 +209,7 @@ curl http://localhost:3000/api/leaderboard
 
 ### Seed Automatique
 
-Lorsque \`AUTO_SEED=true\` dans le fichier \`.env\`, la base de données est **automatiquement remplie** au démarrage avec des données de test si elle est vide.
+Lorsque `AUTO_SEED=true` dans le fichier `.env`, la base de données est **automatiquement remplie** au démarrage avec des données de test si elle est vide.
 
 ### Données incluses dans le seed
 
@@ -247,7 +247,7 @@ Lorsque \`AUTO_SEED=true\` dans le fichier \`.env\`, la base de données est **a
 
 Si vous souhaitez re-remplir la base manuellement :
 
-\`\`\`bash
+```bash
 
 # Remplir la base (ne fait rien si elle contient déjà des données)
 
@@ -256,7 +256,7 @@ npm run seed
 # Nettoyer ET remplir la base
 
 npm run seed:clear
-\`\`\`
+```
 
 ### Connexion avec les Utilisateurs de Test
 
@@ -281,43 +281,43 @@ Authorization: Bearer YOUR_TOKEN_HERE
 
 ## 📡 Routes API Implémentées
 
-Toutes les routes de la spécification OpenAPI (\`specifications.yaml\`) sont implémentées :
+Toutes les routes de la spécification OpenAPI (`specifications.yaml`) sont implémentées :
 
 ### �� Authentification
 
-- \`POST /api/auth/register\` - Créer un compte
-- \`POST /api/auth/login\` - Se connecter
+- `POST /api/auth/register` - Créer un compte
+- `POST /api/auth/login` - Se connecter
 
 ### 👤 Utilisateurs
 
-- \`GET /api/users\` - Liste des utilisateurs (admin)
-- \`GET /api/users/me\` - Profil utilisateur connecté
-- \`PUT /api/users/me\` - Mettre à jour son profil
-- \`GET /api/users/:id\` - Récupérer un utilisateur
-- \`DELETE /api/users/:id\` - Supprimer un utilisateur (admin)
-- \`GET /api/users/:id/progress\` - Progression d'un utilisateur
+- `GET /api/users` - Liste des utilisateurs (admin)
+- `GET /api/users/me` - Profil utilisateur connecté
+- `PUT /api/users/me` - Mettre à jour son profil
+- `GET /api/users/:id` - Récupérer un utilisateur
+- `DELETE /api/users/:id` - Supprimer un utilisateur (admin)
+- `GET /api/users/:id/progress` - Progression d'un utilisateur
 
 ### ✅ Tâches
 
-- \`GET /api/tasks\` - Liste des tâches (avec filtres: limit, offset, category)
-- \`POST /api/tasks\` - Créer une tâche
-- \`PUT /api/tasks/:id\` - Mettre à jour une tâche
-- \`DELETE /api/tasks/:id\` - Supprimer une tâche
-- \`PATCH /api/tasks/:id/complete\` - Marquer comme complétée (ajout XP)
+- `GET /api/tasks` - Liste des tâches (avec filtres: limit, offset, category)
+- `POST /api/tasks` - Créer une tâche
+- `PUT /api/tasks/:id` - Mettre à jour une tâche
+- `DELETE /api/tasks/:id` - Supprimer une tâche
+- `PATCH /api/tasks/:id/complete` - Marquer comme complétée (ajout XP)
 
 ### 🏅 Badges
 
-- \`GET /api/badges\` - Liste des badges obtenus
+- `GET /api/badges` - Liste des badges obtenus
 
 ### 🎯 Challenges
 
-- \`GET /api/challenges\` - Liste des challenges
-- \`GET /api/challenges/today\` - Défi du jour
-- \`POST /api/challenges/:id/complete\` - Compléter un défi
+- `GET /api/challenges` - Liste des challenges
+- `GET /api/challenges/today` - Défi du jour
+- `POST /api/challenges/:id/complete` - Compléter un défi
 
 ### 🏆 Leaderboard
 
-- \`GET /api/leaderboard\` - Classement global (avec limit, offset)
+- `GET /api/leaderboard` - Classement global (avec limit, offset)
 
 ### 📂 Categories
 
@@ -384,7 +384,7 @@ Un fichier `api.http` est disponible à la racine du projet pour tester facileme
 
 **1. Spécification OpenAPI d'abord**
 
-- J'ai commencé par définir le fichier \`specifications.yaml\` complet
+- J'ai commencé par définir le fichier `specifications.yaml` complet
 - Cela m'a permis de clarifier les endpoints nécessaires, définir les modèles de données et valider la cohérence de l'API avant l'implémentation
 
 **2. Développement du serveur NestJS**
@@ -472,7 +472,7 @@ Le client peut maintenant voir qu'il peut créer une nouvelle tâche via `POST /
 
 ## 📦 Structure du Projet
 
-\`\`\`
+```
 .
 ├── api.http # REST Client pour tester l'API
 ├── docker-compose.yml # Configuration Docker
@@ -505,7 +505,7 @@ Le client peut maintenant voir qu'il peut créer une nouvelle tâche via `POST /
 ├── app.module.ts # Module racine
 ├── main.ts # Point d'entrée
 └── seed.ts # Script de seed manuel
-\`\`\`
+```
 
 ---
 
@@ -520,9 +520,9 @@ Le client peut maintenant voir qu'il peut créer une nouvelle tâche via `POST /
 
 ## 🐳 Déploiement avec Docker
 
-Le projet inclut un \`docker-compose.yml\` pour MongoDB :
+Le projet inclut un `docker-compose.yml` pour MongoDB :
 
-\`\`\`yaml
+```yaml
 services:
 mongo:
 image: mongo:6.0
@@ -534,11 +534,11 @@ MONGO_INITDB_ROOT_PASSWORD: example
 MONGO_INITDB_DATABASE: todo
 ports: - "27017:27017"
 volumes: - mongo-data:/data/db
-\`\`\`
+```
 
 ### Commandes Docker
 
-\`\`\`bash
+```bash
 
 # Démarrer MongoDB
 
@@ -555,7 +555,7 @@ docker-compose down
 # Nettoyer complètement (supprime les données)
 
 docker-compose down -v
-\`\`\`
+```
 
 ---
 
